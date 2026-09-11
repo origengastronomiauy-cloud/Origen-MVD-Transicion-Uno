@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Guía Sincronizada</title>
+    <style>
+        body { font-family: sans-serif; background: #111; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; text-align: center; }
+        button { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; margin-top: 20px; }
+        #timer { font-size: 28px; font-weight: bold; margin: 20px 0; color: #ffc107; }
+    </style>
+</head>
+<body>
+    <h2>Recorrido Turístico - Stand By</h2>
+    <p>Presiona el botón para habilitar tus auriculares y quedar a la espera:</p>
+    <button id="enableBtn">Habilitar Audio</button>
+    <div id="timer">Esperando sincronización...</div>
+    <!-- Apunta directamente al archivo mp3 que subiste a GitHub -->
+    <audio id="audioTrack" src="audio.mp3" preload="auto"></audio>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const targetTime = parseInt(urlParams.get('t')) || 0;
+        const audio = document.getElementById('audioTrack');
+        const timerDiv = document.getElementById('timer');
+        const enableBtn = document.getElementById('enableBtn');
+
+        enableBtn.addEventListener('click', () => {
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+                enableBtn.style.display = 'none';
+                timerDiv.innerText = "Audio listo. Esperando hora de inicio...";
+                checkSync();
+            }).catch(e => alert("Error al habilitar audio: " + e));
+        });
+
+        function checkSync() {
+            const interval = setInterval(() => {
+                const now = Date.now();
+                const timeLeft = Math.floor((targetTime - now) / 1000);
+
+                if (targetTime === 0) {
+                    timerDiv.innerText = "Esperando que el guía fije el horario...";
+                    return;
+                }
+
+                if (timeLeft > 0) {
+                    timerDiv.innerText = `Comienza en: ${timeLeft}s`;
+                } else {
+                    timerDiv.innerText = "¡Reproduciendo!";
+                    audio.play();
+                    clearInterval(interval);
+                }
+            }, 200);
+        }
+        if (targetTime > 0) checkSync();
+    </script>
+</body>
+</html>
