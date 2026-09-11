@@ -1,3 +1,10 @@
+Perfecto, usar Cloudinary es una excelente idea para no sobrecargar el repositorio de GitHub con archivos pesados de audio.
+
+Solo tienes que cambiar una sola línea en el código de tu archivo index.html para que apunte a tu enlace de Cloudinary.
+
+Aquí tienes el código completo actualizado con tu enlace de Cloudinary ya listo para usar:
+
+HTML
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -15,8 +22,9 @@
     <p>Presiona el botón para habilitar tus auriculares y quedar a la espera:</p>
     <button id="enableBtn">Habilitar Audio</button>
     <div id="timer">Esperando sincronización...</div>
-    <!-- Apunta directamente al archivo mp3 que subiste a GitHub -->
-    <audio id="audioTrack" src="audio.mp3" preload="auto"></audio>
+    
+    <!-- AQUÍ REEMPLAZA EL ENLACE ENTRE LAS COMILLAS POR TU URL DIRECTA DE CLOUDINARY -->
+    <audio id="audioTrack" src="https://res.cloudinary.com/f8l7nucq/video/upload/v1786714208/Primer_recorrido_Origen_vFinalMix_260811_COMPRIMIDO_bkh8il.mp3" preload="auto"></audio>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
