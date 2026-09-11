@@ -3,59 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Audio Guía Sincronizada</title>
+    <title>Audio Guía en Vivo</title>
+    <!-- Librería gratuita integrada para comunicación en tiempo real sin cuentas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #111; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; text-align: center; }
-        button { background: #007bff; color: white; border: none; padding: 15px 30px; font-size: 18px; border-radius: 8px; cursor: pointer; margin-top: 20px; }
-        #timer { font-size: 28px; font-weight: bold; margin: 20px 0; color: #ffc107; }
+        button { background: #28a745; color: white; border: none; padding: 20px 40px; font-size: 20px; border-radius: 8px; cursor: pointer; margin-top: 20px; font-weight: bold; }
+        #status { font-size: 24px; margin: 20px 0; color: #ffc107; }
+        .admin-panel { background: #222; padding: 20px; border-radius: 10px; border: 2px dashed #007bff; display: none; }
     </style>
 </head>
 <body>
-    <h2>Recorrido Turístico - Stand By</h2>
-    <p>Presiona el botón para habilitar tus auriculares y quedar a la espera:</p>
-    <button id="enableBtn">Habilitar Audio</button>
-    <div id="timer">Esperando sincronización...</div>
-    
-    <!-- AQUÍ REEMPLAZA EL ENLACE ENTRE LAS COMILLAS POR TU URL DIRECTA DE CLOUDINARY -->
+
+    <div id="listenerView">
+        <h2>Recorrido Turístico</h2>
+        <p>Presiona para habilitar tus auriculares:</p>
+        <button id="enableBtn">Habilitar Audio</button>
+        <div id="status">Esperando al guía...</div>
+    </div>
+
+    <div id="adminPanel" class="admin-panel">
+        <h2>PANEL DEL GUÍA</h2>
+        <button id="playBtn" style="background: #dc3545;">¡DAR PLAY A TODOS!</button>
+    </div>
+
+    <!-- Reemplaza aquí abajo el enlace por tu URL directa de Cloudinary -->
     <audio id="audioTrack" src="https://res.cloudinary.com/f8l7nucq/video/upload/v1786714208/Primer_recorrido_Origen_vFinalMix_260811_COMPRIMIDO_bkh8il.mp3" preload="auto"></audio>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const targetTime = parseInt(urlParams.get('t')) || 0;
         const audio = document.getElementById('audioTrack');
-        const timerDiv = document.getElementById('timer');
+        const statusDiv = document.getElementById('status');
         const enableBtn = document.getElementById('enableBtn');
+        const adminPanel = document.getElementById('adminPanel');
+        const playBtn = document.getElementById('playBtn');
 
+        const urlParams = new URLSearchParams(window.location.search);
+        const isAdmin = urlParams.get('admin') === '1';
+
+        if (isAdmin) {
+            document.getElementById('listenerView').style.display = 'none';
+            adminPanel.style.display = 'block';
+        }
+
+        // Sistema de conexión en tiempo real sin bases de datos ni registros
+        const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8000), "client_" + Math.random());
+
+        client.onMessageArrived = function (message) {
+            if (message.payloadString === "PLAY_AUDIO" && !isAdmin) {
+                audio.play();
+                statusDiv.innerText = "¡Reproduciendo!";
+            }
+        };
+
+        client.connect({
+            onSuccess: function () {
+                client.subscribe("origen/tour/audio");
+            },
+            useSSL: false
+        });
+
+        // Turista habilita su audio al llegar
         enableBtn.addEventListener('click', () => {
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
                 enableBtn.style.display = 'none';
-                timerDiv.innerText = "Audio listo. Esperando hora de inicio...";
-                checkSync();
-            }).catch(e => alert("Error al habilitar audio: " + e));
+                statusDiv.innerText = "¡Auriculares listos! Esperando señal del guía...";
+            }).catch(e => alert("Error: " + e));
         });
 
-        function checkSync() {
-            const interval = setInterval(() => {
-                const now = Date.now();
-                const timeLeft = Math.floor((targetTime - now) / 1000);
-
-                if (targetTime === 0) {
-                    timerDiv.innerText = "Esperando que el guía fije el horario...";
-                    return;
-                }
-
-                if (timeLeft > 0) {
-                    timerDiv.innerText = `Comienza en: ${timeLeft}s`;
-                } else {
-                    timerDiv.innerText = "¡Reproduciendo!";
-                    audio.play();
-                    clearInterval(interval);
-                }
-            }, 200);
-        }
-        if (targetTime > 0) checkSync();
+        // Tú (Guía) disparas el Play
+        playBtn.addEventListener('click', () => {
+            if (client.isConnected()) {
+                message = new Paho.MQTT.Message("PLAY_AUDIO");
+                message.destinationName = "origen/tour/audio";
+                client.send(message);
+                alert("¡Orden enviada con éxito!");
+            } else {
+                alert("Conectándose al sistema, espera un segundo y vuelve a intentar.");
+            }
+        });
     </script>
 </body>
 </html>
