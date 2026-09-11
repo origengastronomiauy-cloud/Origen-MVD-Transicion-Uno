@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Guía en Vivo</title>
-    <!-- Librería gratuita integrada para comunicación en tiempo real sin cuentas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #111; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; text-align: center; }
@@ -27,7 +26,7 @@
         <button id="playBtn" style="background: #dc3545;">¡DAR PLAY A TODOS!</button>
     </div>
 
-    <!-- Reemplaza aquí abajo el enlace por tu URL directa de Cloudinary -->
+    <!-- Asegúrate de que aquí esté tu enlace real de Cloudinary -->
     <audio id="audioTrack" src="https://res.cloudinary.com/f8l7nucq/video/upload/v1786714208/Primer_recorrido_Origen_vFinalMix_260811_COMPRIMIDO_bkh8il.mp3" preload="auto"></audio>
 
     <script>
@@ -45,8 +44,8 @@
             adminPanel.style.display = 'block';
         }
 
-        // Sistema de conexión en tiempo real sin bases de datos ni registros
-        const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8000), "client_" + Math.random());
+        // Conexión segura compatible con HTTPS (GitHub Pages)
+        const client = new Paho.MQTT.Client("broker.hivemq.com", Number(8884), "client_" + Math.random());
 
         client.onMessageArrived = function (message) {
             if (message.payloadString === "PLAY_AUDIO" && !isAdmin) {
@@ -59,10 +58,10 @@
             onSuccess: function () {
                 client.subscribe("origen/tour/audio");
             },
-            useSSL: false
+            useSSL: true
         });
 
-        // Turista habilita su audio al llegar
+        // Turista habilita su audio
         enableBtn.addEventListener('click', () => {
             audio.play().then(() => {
                 audio.pause();
@@ -72,7 +71,7 @@
             }).catch(e => alert("Error: " + e));
         });
 
-        // Tú (Guía) disparas el Play
+        // Guía presiona Play
         playBtn.addEventListener('click', () => {
             if (client.isConnected()) {
                 message = new Paho.MQTT.Message("PLAY_AUDIO");
@@ -80,7 +79,7 @@
                 client.send(message);
                 alert("¡Orden enviada con éxito!");
             } else {
-                alert("Conectándose al sistema, espera un segundo y vuelve a intentar.");
+                alert("Conectándose al servidor, espera 2 segundos y vuelve a intentar.");
             }
         });
     </script>
